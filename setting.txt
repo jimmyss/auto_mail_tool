@@ -1,0 +1,7 @@
+hr邮箱:dushimao@gbcom.com.cn
+hr邮箱密码:Qewxs132!#@
+发送人姓名:杜世茂
+邮件主题:自动发邮件测试
+邮件正文内容:你好，这是一个自动发送的邮件！
+待发送excel文件全名:报表.xlsx
+word模板文件全名:通知.docx
