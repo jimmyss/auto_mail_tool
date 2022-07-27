@@ -1,5 +1,8 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
+import tkinter as tk
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
 from openpyxl import load_workbook
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
@@ -8,7 +11,6 @@ from email.mime.text import MIMEText
 from email.header import Header, make_header
 from email.mime.multipart import MIMEMultipart
 from re import match
-from tkinter import *
 from tkinter import filedialog, dialog
 import os
 
@@ -260,62 +262,64 @@ def open_file(num):
 
 
 # 调用Tk()创建主窗口
-root_window =Tk()
+root_window =tk.Tk()
 # 给主窗口起一个名字，也就是窗口的名字
 root_window.title('自动办公工具')
 # 设置窗口大小:宽x高,注,此处不能为 "*",必须使用 "x"
-root_window.geometry('450x300')
+root_window.geometry('550x550')
+
+inputFrame=ttk.Frame(root_window,padding=(10,5,10,0))
 
 
-mail_l=Label(root_window,text="hr邮箱:")
-mail_l.grid(row=0,sticky=E)
-pwd_l=Label(root_window,text="hr邮箱密码:")
-pwd_l.grid(row=1,sticky=E)
-name_l=Label(root_window,text="发送人姓名:")
-name_l.grid(row=2,sticky=E)
-title_l=Label(root_window,text="邮件主题:")
-title_l.grid(row=3,sticky=E)
-text_l=Label(root_window,text="邮件正文内容:")
-text_l.grid(row=4,sticky=E)
-excel_l=Label(root_window,text="待发送excel文件全名:")
-excel_l.grid(row=5,sticky=E)
-word_l=Label(root_window,text="word模板文件全名:")
-word_l.grid(row=6,sticky=E)
-result_l=Label(root_window, text="结果显示:")
-result_l.grid(row=8,sticky=NE)
+mail_l=ttk.Label(inputFrame,text="hr邮箱:")
+mail_l.grid(row=0,sticky=E,pady=10)
+pwd_l=ttk.Label(inputFrame,text="hr邮箱密码:")
+pwd_l.grid(row=1,sticky=E,pady=10)
+name_l=ttk.Label(inputFrame,text="发送人姓名:")
+name_l.grid(row=2,sticky=E,pady=10)
+title_l=ttk.Label(inputFrame,text="邮件主题:")
+title_l.grid(row=3,sticky=E,pady=10)
+text_l=ttk.Label(inputFrame,text="邮件正文内容:")
+text_l.grid(row=4,sticky=E,pady=10)
+excel_l=ttk.Label(inputFrame,text="待发送excel文件全名:")
+excel_l.grid(row=5,sticky=E,pady=10)
+word_l=ttk.Label(inputFrame,text="word模板文件全名:")
+word_l.grid(row=6,sticky=E,pady=10)
+result_l=ttk.Label(inputFrame, text="结果显示:")
+result_l.grid(row=8,sticky=NE,pady=10)
 
 #输入控件
-mail=Entry(root_window, width=35)
+mail=ttk.Entry(inputFrame, width=35)
 mail.grid(row=0,column=1)
-pwd=Entry(root_window, width=35)
+pwd=ttk.Entry(inputFrame, width=35, show="●")
 pwd.grid(row=1,column=1)
-sender_name=Entry(root_window, width=35)
+sender_name=ttk.Entry(inputFrame, width=35)
 sender_name.grid(row=2,column=1)
-title=Entry(root_window, width=35)
+title=ttk.Entry(inputFrame, width=35)
 title.grid(row=3,column=1)
-text=Entry(root_window, width=35)
+text=ttk.Entry(inputFrame, width=35)
 text.grid(row=4,column=1)
-excel=Entry(root_window, width=35)
+excel=ttk.Entry(inputFrame, width=35)
 excel.grid(row=5,column=1)
-word=Entry(root_window, width=35)
+word=ttk.Entry(inputFrame, width=35)
 word.grid(row=6,column=1)
 
 #按钮控件
-send_button=Button(root_window, text="发送", command=press_send)
-send_button.grid(row=7, column=1)
-open_file_button=Button(root_window, text="信息自动填入", command=lambda: open_file(0))
+send_button=ttk.Button(inputFrame, text="发送", command=press_send)
+send_button.grid(row=7, column=1,pady=10)
+open_file_button=ttk.Button(inputFrame, text="信息自动填入", command=lambda: open_file(0))
 open_file_button.grid(row=7, column=0)
-select_excel=Button(root_window, text="选择excel", command=lambda: open_file(1))
-select_excel.grid(row=5, column=2, sticky=W)
-select_word=Button(root_window, text="选择word", command=lambda: open_file(2))
-select_word.grid(row=6, column=2, sticky=W)
+select_excel=ttk.Button(inputFrame, text="选择excel", command=lambda: open_file(1))
+select_excel.grid(row=5, column=2, sticky=W,padx=10)
+select_word=ttk.Button(inputFrame, text="选择word", command=lambda: open_file(2))
+select_word.grid(row=6, column=2, sticky=W,padx=10)
 
 #消息框控件
-message_box=Text(root_window, height=10, width=40)
+message_box=ttk.Text(inputFrame, height=10, width=40)
 message_box.config(state=DISABLED)
 message_box.grid(row=8,column=1,columnspan=8, sticky=W)
 
-
+inputFrame.grid(row = 0, column = 0, columnspan=3)
 
 #开启主循环，让窗口处于显示状态
 root_window.mainloop()
