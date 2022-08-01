@@ -1,18 +1,93 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
+import os
 import tkinter as tk
+from re import match
+from tkinter import filedialog
 import ttkbootstrap as ttk
-from ttkbootstrap.constants import *
-from openpyxl import load_workbook
+import win32com.client as win32
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
-from smtplib import SMTP
-from email.mime.text import MIMEText
-from email.header import Header, make_header
-from email.mime.multipart import MIMEMultipart
-from re import match
-from tkinter import filedialog, dialog
-import os
+from openpyxl import load_workbook
+from ttkbootstrap.constants import *
+
+
+class outlook():
+    def init(self):
+        pass
+
+    def openoutlook(self):
+        pass
+
+    def sendmail(self, receivers, cc_receivers, title, body, attach_path=None):
+        '''
+        发送邮件
+        ：param receivers：收件人
+        ：param title：主题
+        ：param body：邮件内容
+        ：param attach_path：附件地址
+        ；retuxn：发送
+        '''
+        outlook = win32.Dispatch('Outlook.Application')
+        mail = outlook.CreateItem(0)
+
+        if isinstance(receivers, list):
+            if len(receivers) > 1:
+                mail.To = ';'.join(receivers)
+            else:
+                mail.To = receivers[0]
+        else:
+            mail.To = receivers
+        if isinstance(cc_receivers, list):#多个人
+            if len(cc_receivers) > 1:
+                mail.Cc = ';'.join(cc_receivers)
+            else:
+                mail.Cc = cc_receivers[0]
+        else:#单个人
+            mail.Cc = cc_receivers
+        mail.Subject = title
+        mail.Body = body
+        if attach_path is None:
+            pass
+        else:
+            mail.Attachments.Add(attach_path)
+        mail.Send()
+
+    def draftmail(self, receivers, cc_receivers, title, body, attach_path=None):
+        '''
+        保存一份草稿
+        :param receivera:收件人
+        :param title:主题
+        :param body:邮件内容
+        :param attach_path:附件地址
+        :return:保存
+        '''
+        outlook = win32.Dispatch('Outlook.Application')
+        mail = outlook.CreateItem(0)
+
+        # 如果多个人,这里做个判断
+        if isinstance(receivers, list):#多个人
+            if len(receivers) > 1:
+                mail.To = ';'.join(receivers)
+            else:
+                mail.To = receivers[0]
+        else:#单个人
+            mail.To = receivers
+        #同样对抄送人也做处理
+        if isinstance(cc_receivers, list):#多个人
+            if len(cc_receivers) > 1:
+                mail.Cc = ';'.join(cc_receivers)
+            else:
+                mail.Cc = cc_receivers[0]
+        else:#单个人
+            mail.Cc = cc_receivers
+
+        mail.Subject = title
+        mail.Body = body
+        if attach_path is not None:
+            mail.Attachments.Add(attach_path)
+        mail.Save()
+
 
 def set_text(text):
     message_box.config(state=NORMAL)
@@ -25,7 +100,7 @@ def replace(obj):
         obj = ''
         return obj
 
-def send_mail(mail_sender, mail_license, sender_name, mail_subject, mail_content, xlsx_file_name,docx_file_name):
+def send_mail(mail_subject, mail_content, xlsx_file_name,docx_file_name, type):
     try:
         wb = load_workbook("./" + xlsx_file_name, data_only=True)  # 用openpyxl加载excel表格
         ws = wb.active  # 读取Sheet1内容
@@ -73,11 +148,7 @@ def send_mail(mail_sender, mail_license, sender_name, mail_subject, mail_content
                             temp_copy_mail.append(ws.cell(row=i, column=col_copy[j]).value)
                     mail_copy_list.append(temp_copy_mail)
     except Exception as n:
-        return "无法打开或读取excel，请检查excel文件名和setting中待发送excel文件全名是否一致"
-        # print("无法打开或读取excel，请检查excel文件名和setting中待发送excel文件全名是否一致")
-        # print(n)
-        # system("pause")
-        # exit(-1)
+        return "无法打开或读取excel，请检查excel文件名和setting中待发送excel文件全名是否一致，请把excel放在程序文件夹下再运行"
 
 
     # -----将excel提取到的数据填入表格------
@@ -88,10 +159,6 @@ def send_mail(mail_sender, mail_license, sender_name, mail_subject, mail_content
                 document = Document(r"./" + docx_file_name)
             except Exception as e:
                 return "不能打开doc格式，请手动转换模板为docx再执行程序"
-                # print("不能打开doc格式，请手动转换模板为docx再执行程序")
-                # print(e)
-                # system("pause")
-                # exit(-1)
             # 提取文件中的表格
             tables = document.tables
 
@@ -112,9 +179,6 @@ def send_mail(mail_sender, mail_license, sender_name, mail_subject, mail_content
                                     table.cell(i + 1, j).text = ""
                             except Exception as e:
                                 return "word表格格式错误，应该每张表仅有两行"
-                                # print("word表格格式错误，应该每张表仅有两行")
-                                # print(e)
-                                # system("pause")
 
             # -------替换word文档中的姓名/工号姓名-------
             if "姓名" in col_names:
@@ -133,94 +197,47 @@ def send_mail(mail_sender, mail_license, sender_name, mail_subject, mail_content
             # -------保存至新文件，文件名自拟-----
             document.save(r'./' + name + "-" + docx_file_name)
     except Exception as n:
-        return "生成word失败，请检查word文件名与setting中word模板文件全名是否一致"
+        return "生成word失败，请检查word文件名与setting中word模板文件全名是否一致，请把word放在程序文件夹下再运行"
         # print("生成word失败，请检查word文件名与setting中word模板文件全名是否一致")
         # print(n)
         # system("pause")
         # exit(-1)
 
-
-
-    # SMTP服务器地址
-    mail_host = "mail.gbcom.com.cn"
-    count = 0  # 对收件人计数
-    for context in tuples:  # 将每个文件发送
+    #按照用户选择是保存到草稿箱还是保存到发件箱来处理邮件
+    otlk = outlook()
+    count=0 # 对收件人计数
+    for context in tuples: #将每个文件保存到草稿箱
         # 设置收件人邮箱和抄送人邮箱，可以为多个收件人
-        mail_receiver = []
+        mail_receiver = []#收件人
         mail_receiver.append(mail_sendto_list[count])
-        mail_cc_receiver = []
+        mail_cc_receiver = []#抄送人
         for copyer in mail_copy_list[count]:
             mail_cc_receiver.append(copyer)
-        mail_receive = mail_receiver + mail_cc_receiver
-        mm = MIMEMultipart('related')
-        # 邮件主题********根据需要填写**********
-        subject_content = mail_subject  # """自动发邮件测试"""
-        # 设置发送者,这里写发送人姓名即可******根据需要填写*******
-        mm["From"] = sender_name  # "杜世茂"
-        # 设置接受者,这里写收件人的姓名即可
-        mm["To"] = context[col_names.index("姓名")].value
-        # 设置抄送人，这里写抄送人姓名即可
-        mm["Cc"] = ','.join(mail_cc_receiver)
-        # 设置邮件主题
-        mm["Subject"] = Header(subject_content, 'utf-8')
-
-        # 邮件正文内容************根据需要填写************
-        body_content = mail_content  # """你好，这是一个自动发送的邮件！"""
-        # 构造文本,参数1：正文内容，参数2：文本格式，参数3：编码方式
-        message_text = MIMEText(body_content, "plain", "utf-8")
-        # 向MIMEMultipart对象中添加文本对象
-        mm.attach(message_text)
-        # 添加附件
-        filename = context[col_names.index("姓名")].value + "-" + docx_file_name  # 设置附件名，要和生成的word名一致
-        sendFile = open("./" + filename, 'rb').read()
-        att = MIMEText(sendFile, "base64", "utf-8")
-        att.add_header("Content-Type", "application/octet-stream")
-        att.add_header("Content-Disposition", "attachment",
-                       filename="%s" % make_header([(filename, 'UTF-8')]).encode('UTF-8'))
-        mm.attach(att)
-        count += 1
-        result_string=""
-        if 1:
-            try:
-                # 创建SMTP对象
-                stp = SMTP()
-                result_string+=("成功创建邮件："+str(count)+"/"+str(len(tuples))+"\n")
-                #print("成功创建邮件："+str(count)+"/"+str(len(tuples)))
-                # 设置发件人邮箱的域名和端口，端口地址为25
-                stp.connect(mail_host, 25)
-                # 登录邮箱，传递参数1：邮箱地址，参数2：邮箱密码
-                stp.login(mail_sender, mail_license)
-                # 发送邮件，传递参数1：发件人邮箱地址，参数2：收件人邮箱地址，参数3：把邮件内容格式改为str
-                stp.sendmail(mail_sender, mail_receive, mm.as_string())
-                result_string+=("邮件发送成功："+str(count)+"/"+str(len(tuples))+"\n")
-                #print("邮件发送成功："+str(count)+"/"+str(len(tuples))+"\n")
-                # 关闭SMTP对象
-                stp.quit()
-                if count==len(tuples):
-                    return result_string
-            except Exception as e:
-                s="发送" + context[col_names.index("姓名")].value + "的邮件出错，可能是在setting中hr邮箱或者密码写错了，请修改setting后再次运行程序\n"
-                result_string+=s
-                return result_string
-                # print("发送" + context[col_names.index("姓名")].value + "的邮件出错，可能是在setting中hr邮箱或者密码写错了，请修改setting后再次运行程序")
-                # system("pause")
-                # exit(-1)
+        if "姓名" in col_names:#文件收件人姓名
+            name = context[col_names.index("姓名")].value
+        attachment=os.path.join(os.path.abspath(os.path.dirname(os.path.abspath(__file__))+os.path.sep+"."), name + "-" + docx_file_name)
+        attachment=attachment.replace("\\","/")
+        if type == 1:  # 保存到草稿箱
+            otlk.draftmail(title=mail_subject, body=mail_content, receivers=mail_receiver, cc_receivers=mail_cc_receiver, attach_path=attachment)
+        elif type==0: #直接发送
+            otlk.sendmail(title=mail_subject, body=mail_content, receivers=mail_receiver, cc_receivers=mail_cc_receiver, attach_path=attachment)
+    if type==1:
+        return "所有邮件已经保存到草稿箱，请前往Outlook查看。"
+    elif type==0:
+        return "所有邮件已经自动发送，若Outlook处于脱机状态，请前往发件箱查看。"
 
 #按钮事件
-def press_send():
+def press_send(type):
     set_text("")
     #获取输入框信息
-    mail_=mail.get().split('\n')[0]
-    pwd_=pwd.get().split('\n')[0]
-    sender_name_=sender_name.get().split('\n')[0]
     title_=title.get().split('\n')[0]
     text_=text.get().split('\n')[0]
     excel_=excel.get().split('\n')[0]
     word_=word.get()
     #检测输入框是否都有信息
-    if mail_ and pwd_ and sender_name_ and title_ and text_ and excel_ and word_:
+    if title_ and text_ and excel_ and word_:
         #若都有信息，发送邮件
-        result=send_mail(mail_, pwd_, sender_name_, title_, text_, excel_,word_)
+        result=send_mail(title_, text_, excel_,word_, type=type)
         set_text(result)
     else:
         message_box.config(state=NORMAL)
@@ -230,21 +247,12 @@ def press_send():
 def open_file(num):
     file_path = filedialog.askopenfilename(title=u'选择文件', initialdir=(os.path.expanduser('H:/')))
     if file_path is not None:
-        if num==0:
+        if num==0:#打开setting.txt文件
             with open(file=file_path, mode='r+', encoding='utf-8') as file:
-                mail.delete(0, END)
-                pwd.delete(0, END)
-                sender_name.delete(0, END)
                 title.delete(0, END)
                 text.delete(0, END)
                 excel.delete(0, END)
                 word.delete(0, END)
-                t=file.readline().split(':')[1]
-                mail.insert(0,t)
-                t = file.readline().split(':')[1]
-                pwd.insert(0, t)
-                t = file.readline().split(':')[1]
-                sender_name.insert(0, t)
                 t = file.readline().split(':')[1]
                 title.insert(0, t)
                 t = file.readline().split(':')[1]
@@ -271,12 +279,6 @@ root_window.geometry('550x550')
 inputFrame=ttk.Frame(root_window,padding=(10,5,10,0))
 
 
-mail_l=ttk.Label(inputFrame,text="hr邮箱:")
-mail_l.grid(row=0,sticky=E,pady=10)
-pwd_l=ttk.Label(inputFrame,text="hr邮箱密码:")
-pwd_l.grid(row=1,sticky=E,pady=10)
-name_l=ttk.Label(inputFrame,text="发送人姓名:")
-name_l.grid(row=2,sticky=E,pady=10)
 title_l=ttk.Label(inputFrame,text="邮件主题:")
 title_l.grid(row=3,sticky=E,pady=10)
 text_l=ttk.Label(inputFrame,text="邮件正文内容:")
@@ -289,12 +291,6 @@ result_l=ttk.Label(inputFrame, text="结果显示:")
 result_l.grid(row=8,sticky=NE,pady=10)
 
 #输入控件
-mail=ttk.Entry(inputFrame, width=35)
-mail.grid(row=0,column=1)
-pwd=ttk.Entry(inputFrame, width=35, show="●")
-pwd.grid(row=1,column=1)
-sender_name=ttk.Entry(inputFrame, width=35)
-sender_name.grid(row=2,column=1)
 title=ttk.Entry(inputFrame, width=35)
 title.grid(row=3,column=1)
 text=ttk.Entry(inputFrame, width=35)
@@ -305,7 +301,7 @@ word=ttk.Entry(inputFrame, width=35)
 word.grid(row=6,column=1)
 
 #按钮控件
-send_button=ttk.Button(inputFrame, text="发送", command=press_send)
+send_button=ttk.Button(inputFrame, text="直接发送", command=lambda: press_send(0))
 send_button.grid(row=7, column=1,pady=10)
 open_file_button=ttk.Button(inputFrame, text="信息自动填入", command=lambda: open_file(0))
 open_file_button.grid(row=7, column=0)
@@ -313,6 +309,8 @@ select_excel=ttk.Button(inputFrame, text="选择excel", command=lambda: open_fil
 select_excel.grid(row=5, column=2, sticky=W,padx=10)
 select_word=ttk.Button(inputFrame, text="选择word", command=lambda: open_file(2))
 select_word.grid(row=6, column=2, sticky=W,padx=10)
+savedraft_button=ttk.Button(inputFrame, text="保存到草稿箱", command=lambda: press_send(1))
+savedraft_button.grid(row=7, column=2, pady=10)
 
 #消息框控件
 message_box=ttk.Text(inputFrame, height=10, width=40)
