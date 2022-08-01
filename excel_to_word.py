@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import os
+import time
 import tkinter as tk
 from re import match
 from tkinter import filedialog
@@ -11,6 +12,8 @@ from docx.enum.table import WD_TABLE_ALIGNMENT
 from openpyxl import load_workbook
 from ttkbootstrap.constants import *
 
+excel_path=""
+word_path=""
 
 class outlook():
     def init(self):
@@ -100,9 +103,10 @@ def replace(obj):
         obj = ''
         return obj
 
-def send_mail(mail_subject, mail_content, xlsx_file_name,docx_file_name, type):
+def send_mail(mail_subject, mail_content, xlsx_file_path, docx_file_path, type):
+    path=xlsx_file_path.rsplit("/", 1)[0]
     try:
-        wb = load_workbook("./" + xlsx_file_name, data_only=True)  # 用openpyxl加载excel表格
+        wb = load_workbook(xlsx_file_path, data_only=True)  # 用openpyxl加载excel表格
         ws = wb.active  # 读取Sheet1内容
         mail_sendto_list = []  # 保存收件人列表
         mail_copy_list = []  # 保存抄送人列表
@@ -156,7 +160,7 @@ def send_mail(mail_subject, mail_content, xlsx_file_name,docx_file_name, type):
         for context in tuples:
             try:
                 # 打开待操作的docx文件，r表示“防止\转义”
-                document = Document(r"./" + docx_file_name)
+                document = Document(docx_file_path)
             except Exception as e:
                 return "不能打开doc格式，请手动转换模板为docx再执行程序"
             # 提取文件中的表格
@@ -195,14 +199,12 @@ def send_mail(mail_subject, mail_content, xlsx_file_name,docx_file_name, type):
                         run.text = run.text.replace('YYY', number)
 
             # -------保存至新文件，文件名自拟-----
+            docx_file_name=docx_file_path.split('/')[len(docx_file_path.split('/'))-1]
             document.save(r'./' + name + "-" + docx_file_name)
     except Exception as n:
         return "生成word失败，请检查word文件名与setting中word模板文件全名是否一致，请把word放在程序文件夹下再运行"
-        # print("生成word失败，请检查word文件名与setting中word模板文件全名是否一致")
-        # print(n)
-        # system("pause")
-        # exit(-1)
 
+    time.sleep(3)
     #按照用户选择是保存到草稿箱还是保存到发件箱来处理邮件
     otlk = outlook()
     count=0 # 对收件人计数
@@ -215,12 +217,13 @@ def send_mail(mail_subject, mail_content, xlsx_file_name,docx_file_name, type):
             mail_cc_receiver.append(copyer)
         if "姓名" in col_names:#文件收件人姓名
             name = context[col_names.index("姓名")].value
-        attachment=os.path.join(os.path.abspath(os.path.dirname(os.path.abspath(__file__))+os.path.sep+"."), name + "-" + docx_file_name)
-        attachment=attachment.replace("\\","/")
+        #attachment=r'D:\University\notes\北京交通大学软件学院大二杜世茂.pdf'
+        attachment= path +"/" + name + "-" + docx_file_name
         if type == 1:  # 保存到草稿箱
             otlk.draftmail(title=mail_subject, body=mail_content, receivers=mail_receiver, cc_receivers=mail_cc_receiver, attach_path=attachment)
         elif type==0: #直接发送
             otlk.sendmail(title=mail_subject, body=mail_content, receivers=mail_receiver, cc_receivers=mail_cc_receiver, attach_path=attachment)
+        time.sleep(3)
     if type==1:
         return "所有邮件已经保存到草稿箱，请前往Outlook查看。"
     elif type==0:
@@ -228,12 +231,14 @@ def send_mail(mail_subject, mail_content, xlsx_file_name,docx_file_name, type):
 
 #按钮事件
 def press_send(type):
+    global excel_path
+    global word_path
     set_text("")
     #获取输入框信息
     title_=title.get().split('\n')[0]
     text_=text.get().split('\n')[0]
-    excel_=excel.get().split('\n')[0]
-    word_=word.get()
+    excel_=excel_path
+    word_=word_path
     #检测输入框是否都有信息
     if title_ and text_ and excel_ and word_:
         #若都有信息，发送邮件
@@ -245,6 +250,8 @@ def press_send(type):
         message_box.config(state=DISABLED)
 
 def open_file(num):
+    global excel_path
+    global word_path
     file_path = filedialog.askopenfilename(title=u'选择文件', initialdir=(os.path.expanduser('H:/')))
     if file_path is not None:
         if num==0:#打开setting.txt文件
@@ -257,15 +264,19 @@ def open_file(num):
                 title.insert(0, t)
                 t = file.readline().split(':')[1]
                 text.insert(0, t)
-                t = file.readline().split(':')[1]
-                excel.insert(0, t)
-                t = file.readline().split(':')[1]
-                word.insert(0, t)
+                t = file.readline().split(':',1)[1].replace("\n","")
+                excel_path=t
+                excel.insert(0, t.split("\\")[len(t.split("\\"))-1])
+                t = file.readline().split(':',1)[1].replace("\n","")
+                word_path=t
+                word.insert(0, t.split("\\")[len(t.split("\\"))-1])
         elif num==1:
             excel.delete(0,END)
+            excel_path=file_path
             excel.insert(0,file_path.split('/')[len(file_path.split('/'))-1])
         elif num==2:
             word.delete(0,END)
+            word_path=file_path
             word.insert(0,file_path.split('/')[len(file_path.split('/'))-1])
 
 

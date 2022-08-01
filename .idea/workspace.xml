@@ -2,10 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ef9b1c47-cada-4468-8f81-759610a5678d" name="变更" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/excel_to_word.py" beforeDir="false" afterPath="$PROJECT_DIR$/excel_to_word.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/read this doc first请先读说明文档！！.docx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/setting.txt" beforeDir="false" afterPath="$PROJECT_DIR$/setting.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -109,7 +107,7 @@
       <workItem from="1658970310573" duration="12904000" />
       <workItem from="1659234693867" duration="13198000" />
       <workItem from="1659316196262" duration="1421000" />
-      <workItem from="1659332122506" duration="6120000" />
+      <workItem from="1659332122506" duration="14852000" />
     </task>
     <servers />
   </component>
@@ -131,8 +129,8 @@
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/autoSenderProject$test.coverage" NAME="test 覆盖结果" MODIFIED="1659335694200" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/autoSenderProject$excel_to_word.coverage" NAME="excel_to_word 覆盖结果" MODIFIED="1659338246120" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/autoSenderProject$test.coverage" NAME="test 覆盖结果" MODIFIED="1659342741693" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/autoSenderProject$excel_to_word.coverage" NAME="excel_to_word 覆盖结果" MODIFIED="1659346987386" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/auto_mail_tool$excel_to_word.coverage" NAME="excel_to_word 覆盖结果" MODIFIED="1658891542972" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
