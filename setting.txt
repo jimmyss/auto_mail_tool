@@ -1,4 +1,4 @@
 邮件主题:自动发邮件测试
 邮件正文内容:你好，这是一个自动发送的邮件！
-待发送excel文件路径:D:\University\notes\gbcom_internship\auto_mail\autoSenderProject\调薪通知.xlsx
-word模板文件路径:D:\University\notes\gbcom_internship\auto_mail\autoSenderProject\TX通知-新舍.docx
+待发送excel文件路径:D:\University\notes\gbcom_internship\auto_mail\autoSenderProject\报表.xlsx
+word模板文件路径:D:\University\notes\gbcom_internship\auto_mail\autoSenderProject\通知.docx

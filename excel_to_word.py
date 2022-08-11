@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import os
+import sys
 import time
 import tkinter as tk
-from re import match
+from re import search
 from tkinter import filedialog
 import ttkbootstrap as ttk
 import win32com.client as win32
@@ -44,7 +45,7 @@ class outlook():
         if isinstance(cc_receivers, list):#多个人
             if len(cc_receivers) > 1:
                 mail.Cc = ';'.join(cc_receivers)
-            else:
+            elif len(cc_receivers)==1:
                 mail.Cc = cc_receivers[0]
         else:#单个人
             mail.Cc = cc_receivers
@@ -80,7 +81,7 @@ class outlook():
         if isinstance(cc_receivers, list):#多个人
             if len(cc_receivers) > 1:
                 mail.Cc = ';'.join(cc_receivers)
-            else:
+            elif len(cc_receivers)==1:
                 mail.Cc = cc_receivers[0]
         else:#单个人
             mail.Cc = cc_receivers
@@ -93,18 +94,31 @@ class outlook():
 
 
 def set_text(text):
+    """
+
+    :param text: 获取到的提示信息
+    :return: 将程序提示信息显示到下方信息框中
+    """
     message_box.config(state=NORMAL)
     message_box.delete("1.0","end")
     message_box.insert(END,'\n'+str(text))
     message_box.config(state=DISABLED)
 
-def replace(obj):
-    if obj is None:
-        obj = ''
-        return obj
-
 def send_mail(mail_subject, mail_content, xlsx_file_path, docx_file_path, type):
-    path=xlsx_file_path.rsplit("/", 1)[0]
+    """
+
+    :param mail_subject: 邮件主题
+    :param mail_content: 邮件内容
+    :param xlsx_file_path: excel模板绝对路径
+    :param docx_file_path: docx模板绝对路径
+    :param type: 操作类型，包括保存到草稿箱和直接发送
+    :return: 操作结果信息，返回给press_send()函数
+    """
+    app_path=""
+    if getattr(sys, 'frozen', False):
+        app_path = os.path.dirname(sys.executable).replace("\\","/")
+    elif __file__:
+        app_path = os.path.dirname(os.path.abspath(__file__)).replace("\\","/")
     try:
         wb = load_workbook(xlsx_file_path, data_only=True)  # 用openpyxl加载excel表格
         ws = wb.active  # 读取Sheet1内容
@@ -122,12 +136,12 @@ def send_mail(mail_subject, mail_content, xlsx_file_path, docx_file_path, type):
             for j in range(col_max):
                 if ws.cell(row=i + 1, column=j + 1).value:
                     # 识别关键字"邮箱"，确定读取开始行
-                    if match(r"邮箱", str(ws.cell(row=i + 1, column=j + 1).value)):
+                    if search(r"邮箱", str(ws.cell(row=i + 1, column=j + 1).value)):
                         start_row = i + 1
                         mail_col_position = j + 1
                         # 识别关键字“抄送人”，确定有几个抄送人
                         for k in range(j + 1, col_max):
-                            if match(r"邮箱", ws.cell(row=i + 1, column=k + 1).value):  # 如果有邮箱的字眼，就默认为抄送人
+                            if search(r"邮箱", ws.cell(row=i + 1, column=k + 1).value):  # 如果有邮箱的字眼，就默认为抄送人
                                 col_copy.append(k + 1)
                         end_flag = True
                         break
@@ -152,7 +166,7 @@ def send_mail(mail_subject, mail_content, xlsx_file_path, docx_file_path, type):
                             temp_copy_mail.append(ws.cell(row=i, column=col_copy[j]).value)
                     mail_copy_list.append(temp_copy_mail)
     except Exception as n:
-        return "无法打开或读取excel，请检查excel文件名和setting中待发送excel文件全名是否一致，请把excel放在程序文件夹下再运行"
+        return "excel模板格式错误，请确认！"
 
 
     # -----将excel提取到的数据填入表格------
@@ -162,7 +176,7 @@ def send_mail(mail_subject, mail_content, xlsx_file_path, docx_file_path, type):
                 # 打开待操作的docx文件，r表示“防止\转义”
                 document = Document(docx_file_path)
             except Exception as e:
-                return "不能打开doc格式，请手动转换模板为docx再执行程序"
+                return "word模板格式错误，请确认！"
             # 提取文件中的表格
             tables = document.tables
 
@@ -218,11 +232,12 @@ def send_mail(mail_subject, mail_content, xlsx_file_path, docx_file_path, type):
         if "姓名" in col_names:#文件收件人姓名
             name = context[col_names.index("姓名")].value
         #attachment=r'D:\University\notes\北京交通大学软件学院大二杜世茂.pdf'
-        attachment= path +"/" + name + "-" + docx_file_name
+        attachment= app_path +"/" + name + "-" + docx_file_name
         if type == 1:  # 保存到草稿箱
             otlk.draftmail(title=mail_subject, body=mail_content, receivers=mail_receiver, cc_receivers=mail_cc_receiver, attach_path=attachment)
         elif type==0: #直接发送
             otlk.sendmail(title=mail_subject, body=mail_content, receivers=mail_receiver, cc_receivers=mail_cc_receiver, attach_path=attachment)
+        count+=1
         time.sleep(3)
     if type==1:
         return "所有邮件已经保存到草稿箱，请前往Outlook查看。"
@@ -231,12 +246,17 @@ def send_mail(mail_subject, mail_content, xlsx_file_path, docx_file_path, type):
 
 #按钮事件
 def press_send(type):
+    """
+
+    :param type: 操作类型，包括保存到草稿箱和直接发送
+    :return: 调用set_text()函数将操作结果显示到提示框中
+    """
     global excel_path
     global word_path
     set_text("")
     #获取输入框信息
     title_=title.get().split('\n')[0]
-    text_=text.get().split('\n')[0]
+    text_=text.get('1.0',END)
     excel_=excel_path
     word_=word_path
     #检测输入框是否都有信息
@@ -250,35 +270,41 @@ def press_send(type):
         message_box.config(state=DISABLED)
 
 def open_file(num):
+    """
+
+    :param num: 打开文件的操作符：0代表打开setting.txt文件；1代表打开excel文件；2代表打开word文件
+    :return: 在图形用户界面上方显示读取信息结果
+    """
     global excel_path
     global word_path
     file_path = filedialog.askopenfilename(title=u'选择文件', initialdir=(os.path.expanduser('H:/')))
     if file_path is not None:
-        if num==0:#打开setting.txt文件
+        if num==0:#打开setting.txt文件,这里只需要打开读取文件内容即可，不需要考虑文件保存路径，但是需要读取excel与word模板绝对路径并显示文件名并更新至全局变量
             with open(file=file_path, mode='r+', encoding='utf-8') as file:
                 title.delete(0, END)
-                text.delete(0, END)
+                text.delete("1.0", "end")
                 excel.delete(0, END)
                 word.delete(0, END)
                 t = file.readline().split(':')[1]
                 title.insert(0, t)
                 t = file.readline().split(':')[1]
-                text.insert(0, t)
+                text.insert(END, t)
                 t = file.readline().split(':',1)[1].replace("\n","")
-                excel_path=t
                 excel.insert(0, t.split("\\")[len(t.split("\\"))-1])
+                excel_path = t.replace("\\","/")
                 t = file.readline().split(':',1)[1].replace("\n","")
-                word_path=t
                 word.insert(0, t.split("\\")[len(t.split("\\"))-1])
-        elif num==1:
+                word_path = t.replace("\\","/")
+        elif num==1:#打开excel文件，并更新全局变量
             excel.delete(0,END)
             excel_path=file_path
             excel.insert(0,file_path.split('/')[len(file_path.split('/'))-1])
-        elif num==2:
+        elif num==2:#打开word文件，并更新全局变量
             word.delete(0,END)
             word_path=file_path
             word.insert(0,file_path.split('/')[len(file_path.split('/'))-1])
 
+#-----------------tkinter & ttkbootstrap----------------
 
 # 调用Tk()创建主窗口
 root_window =tk.Tk()
@@ -293,7 +319,7 @@ inputFrame=ttk.Frame(root_window,padding=(10,5,10,0))
 title_l=ttk.Label(inputFrame,text="邮件主题:")
 title_l.grid(row=3,sticky=E,pady=10)
 text_l=ttk.Label(inputFrame,text="邮件正文内容:")
-text_l.grid(row=4,sticky=E,pady=10)
+text_l.grid(row=4,sticky=NE,pady=10)
 excel_l=ttk.Label(inputFrame,text="待发送excel文件全名:")
 excel_l.grid(row=5,sticky=E,pady=10)
 word_l=ttk.Label(inputFrame,text="word模板文件全名:")
@@ -304,8 +330,11 @@ result_l.grid(row=8,sticky=NE,pady=10)
 #输入控件
 title=ttk.Entry(inputFrame, width=35)
 title.grid(row=3,column=1)
-text=ttk.Entry(inputFrame, width=35)
-text.grid(row=4,column=1)
+text=ttk.Text(inputFrame,height=7, width=35)
+text.config(state=NORMAL)
+text.grid(row=4, column=1, sticky=NW)
+#text=ttk.Entry(inputFrame, width=35)
+# text.grid(row=4,column=1)
 excel=ttk.Entry(inputFrame, width=35)
 excel.grid(row=5,column=1)
 word=ttk.Entry(inputFrame, width=35)
